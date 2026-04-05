@@ -3,32 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tier List Maker 2.0</title>
+    <title>Tier List Maker - Finaltime Studios Edition</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Montserrat:wght@900&display=swap');
 
         :root {
             --bg-color: #0f172a;
             --surface-color: #1e293b;
             --surface-hover: #334155;
             --text-color: #f8fafc;
-            --text-muted: #94a3b8;
-            --accent: #8b5cf6;
-            --accent-hover: #7c3aed;
+            --accent: #38bdf8;
+            --accent-hover: #0284c7;
+            --danger: #ef4444;
             
             /* Tier Colors */
-            --tier-s: #ef4444; /* Vermelho */
-            --tier-a: #f97316; /* Laranja */
-            --tier-b: #eab308; /* Amarelo */
-            --tier-c: #22c55e; /* Verde */
-            --tier-d: #3b82f6; /* Azul */
+            --tier-s: #ff7f7f; 
+            --tier-a: #ffbf7f; 
+            --tier-b: #ffff7f; 
+            --tier-c: #7fff7f; 
+            --tier-d: #7fbfff; 
         }
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
             font-family: 'Inter', sans-serif;
@@ -37,51 +34,114 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 40px 20px;
+            padding: 30px 20px;
             min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
         }
 
         h1 {
+            font-family: 'Montserrat', sans-serif;
             font-size: 3rem;
-            font-weight: 800;
-            margin-bottom: 40px;
             background: linear-gradient(to right, #38bdf8, #8b5cf6);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            text-align: center;
+            letter-spacing: -1px;
         }
 
-        /* Container Principal */
+        .subtitle {
+            color: #94a3b8;
+            font-size: 1rem;
+            font-weight: 600;
+            margin-top: 5px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        /* Toolbar / Controles */
+        .toolbar {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            width: 100%;
+            max-width: 1000px;
+            flex-wrap: wrap;
+            background: var(--surface-color);
+            padding: 15px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+
+        .btn {
+            background-color: var(--accent);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn:hover { background-color: var(--accent-hover); transform: translateY(-2px); }
+        .btn:active { transform: scale(0.95); }
+        .btn-danger { background-color: var(--danger); }
+        .btn-danger:hover { background-color: #b91c1c; }
+
+        /* Escondendo o input de arquivo original */
+        input[type="file"] { display: none; }
+
+        /* Área de Captura (O que vai virar PNG) */
+        #capture-area {
+            width: 100%;
+            max-width: 1000px;
+            background-color: var(--bg-color); /* Fundo da imagem gerada */
+            padding: 10px;
+            border-radius: 12px;
+            position: relative;
+        }
+
+        /* Container Principal da Tier List */
         .board {
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 4px;
             width: 100%;
-            max-width: 1000px;
-            margin-bottom: 40px;
+            background-color: #000;
+            border: 4px solid #000;
+            border-radius: 8px;
+            overflow: hidden;
         }
 
-        /* Linhas da Tier List */
         .tier-row {
             display: flex;
-            background-color: var(--surface-color);
-            border-radius: 12px;
-            overflow: hidden;
-            min-height: 120px;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
-            transition: transform 0.2s ease;
+            background-color: #1a1a1a;
+            min-height: 100px;
+            border-bottom: 2px solid #000;
         }
+        .tier-row:last-child { border-bottom: none; }
 
         .tier-label {
-            width: 120px;
+            width: 110px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 2.5rem;
+            font-size: 1.2rem;
             font-weight: 800;
-            color: rgba(0, 0, 0, 0.6);
-            text-shadow: 1px 1px 0px rgba(255, 255, 255, 0.2);
+            color: #111;
+            text-align: center;
+            padding: 10px;
             flex-shrink: 0;
+            border-right: 4px solid #000;
+            outline: none; /* Remove borda ao digitar */
+            cursor: text;
         }
 
         .tier-s .tier-label { background-color: var(--tier-s); }
@@ -90,170 +150,145 @@
         .tier-c .tier-label { background-color: var(--tier-c); }
         .tier-d .tier-label { background-color: var(--tier-d); }
 
-        /* Área onde os itens ficam */
         .drop-zone {
             flex-grow: 1;
-            padding: 15px;
             display: flex;
             flex-wrap: wrap;
-            gap: 15px;
             align-content: flex-start;
-            transition: background-color 0.3s ease;
+            min-height: 100px;
+            transition: background-color 0.2s;
         }
 
-        .drop-zone.drag-over {
-            background-color: rgba(255, 255, 255, 0.05);
+        .drop-zone.drag-over { background-color: rgba(255, 255, 255, 0.1); }
+
+        /* Marca d'água dentro da área de captura */
+        .watermark {
+            text-align: right;
+            padding: 10px 5px 0 0;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 900;
+            color: rgba(255, 255, 255, 0.3);
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
         /* Banco de Itens (Pool) */
         .item-pool-wrapper {
             width: 100%;
             max-width: 1000px;
+            margin-top: 30px;
             background-color: var(--surface-color);
             border-radius: 12px;
-            padding: 25px;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
         }
 
-        .controls {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 25px;
-        }
+        .item-pool-wrapper h3 { margin-bottom: 15px; color: var(--text-muted); }
 
-        .controls input {
-            flex-grow: 1;
-            background-color: var(--bg-color);
-            border: 2px solid transparent;
-            color: var(--text-color);
-            padding: 12px 20px;
-            border-radius: 8px;
-            font-size: 1rem;
-            outline: none;
-            transition: border-color 0.2s;
-        }
-
-        .controls input:focus {
-            border-color: var(--accent);
-        }
-
-        .controls button {
-            background-color: var(--accent);
-            color: white;
-            border: none;
-            padding: 0 25px;
-            border-radius: 8px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background-color 0.2s, transform 0.1s;
-        }
-
-        .controls button:hover {
-            background-color: var(--accent-hover);
-        }
-
-        .controls button:active {
-            transform: scale(0.95);
-        }
-
-        /* Estilo dos Itens (Cartas) */
+        /* Estilo das Imagens/Itens */
         .item {
-            width: 100px;
-            height: 100px;
+            width: 90px;
+            height: 90px;
             background-color: var(--surface-hover);
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            font-size: 0.9rem;
-            font-weight: 600;
-            padding: 10px;
             cursor: grab;
             user-select: none;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            transition: transform 0.1s, box-shadow 0.1s;
-            word-wrap: break-word;
+            background-size: cover;
+            background-position: center;
+            border: 2px solid transparent;
+            transition: transform 0.1s;
+            position: relative;
         }
 
-        .item:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
-            border-color: var(--accent);
+        /* Botão de excluir que aparece ao passar o mouse */
+        .item .delete-btn {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: red;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 12px;
+            cursor: pointer;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
         }
 
-        .item:active {
-            cursor: grabbing;
-            transform: scale(0.95);
-        }
+        .item:hover { transform: scale(1.05); z-index: 10; border-color: white; }
+        .item:hover .delete-btn { display: flex; }
+        .item:active { cursor: grabbing; transform: scale(0.95); }
+        .item.dragging { opacity: 0.5; }
 
-        .item.dragging {
-            opacity: 0.4;
-        }
-
-        /* Mobile tweaks */
-        @media (max-width: 600px) {
-            .tier-label { width: 80px; font-size: 2rem; }
-            .item { width: 80px; height: 80px; font-size: 0.75rem; }
-            h1 { font-size: 2rem; }
-        }
+        /* Para evitar que a imagem fantasma padrão do navegador bugue */
+        .item img { pointer-events: none; } 
     </style>
 </head>
 <body>
 
-    <h1>Tier List Maker 2.0</h1>
+    <div class="header">
+        <h1>TIER LIST MAKER</h1>
+        <div class="subtitle">Powered by Finaltime Studios</div>
+    </div>
 
-    <div class="board">
-        <div class="tier-row tier-s">
-            <div class="tier-label">S</div>
-            <div class="drop-zone"></div>
+    <div class="toolbar">
+        <label for="imageUpload" class="btn">
+            📷 Adicionar Imagens
+        </label>
+        <input type="file" id="imageUpload" accept="image/*" multiple>
+        
+        <button class="btn" id="exportBtn">📥 Exportar Imagem (.PNG)</button>
+        <button class="btn btn-danger" id="clearBtn">🗑️ Limpar Tudo</button>
+    </div>
+
+    <div id="capture-area">
+        <div class="board" id="mainBoard">
+            <div class="tier-row tier-s">
+                <div class="tier-label" contenteditable="true">S</div>
+                <div class="drop-zone" id="zone-s"></div>
+            </div>
+            <div class="tier-row tier-a">
+                <div class="tier-label" contenteditable="true">A</div>
+                <div class="drop-zone" id="zone-a"></div>
+            </div>
+            <div class="tier-row tier-b">
+                <div class="tier-label" contenteditable="true">B</div>
+                <div class="drop-zone" id="zone-b"></div>
+            </div>
+            <div class="tier-row tier-c">
+                <div class="tier-label" contenteditable="true">C</div>
+                <div class="drop-zone" id="zone-c"></div>
+            </div>
+            <div class="tier-row tier-d">
+                <div class="tier-label" contenteditable="true">D</div>
+                <div class="drop-zone" id="zone-d"></div>
+            </div>
         </div>
-        <div class="tier-row tier-a">
-            <div class="tier-label">A</div>
-            <div class="drop-zone"></div>
-        </div>
-        <div class="tier-row tier-b">
-            <div class="tier-label">B</div>
-            <div class="drop-zone"></div>
-        </div>
-        <div class="tier-row tier-c">
-            <div class="tier-label">C</div>
-            <div class="drop-zone"></div>
-        </div>
-        <div class="tier-row tier-d">
-            <div class="tier-label">D</div>
-            <div class="drop-zone"></div>
-        </div>
+        <div class="watermark">FINALTIME STUDIOS</div>
     </div>
 
     <div class="item-pool-wrapper">
-        <div class="controls">
-            <input type="text" id="newItemInput" placeholder="Digite o nome de um item e aperte Enter...">
-            <button id="addItemBtn">Adicionar</button>
-        </div>
-        <div class="drop-zone item-pool" id="itemPool">
-            <div class="item" draggable="true">Doom</div>
-            <div class="item" draggable="true">Life is Strange</div>
-            <div class="item" draggable="true">The Cat Lady</div>
-            <div class="item" draggable="true">Rocksmith 2014</div>
-            <div class="item" draggable="true">Nirvana</div>
-            <div class="item" draggable="true">Tagima 530</div>
-            <div class="item" draggable="true">Visual Novels</div>
-        </div>
+        <h3>Banco de Itens (Arraste as imagens daqui)</h3>
+        <div class="drop-zone" id="itemPool" style="min-height: 120px; border: 2px dashed #334155; padding: 10px;">
+            </div>
     </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const dropZones = document.querySelectorAll('.drop-zone');
             const itemPool = document.getElementById('itemPool');
-            const input = document.getElementById('newItemInput');
-            const btn = document.getElementById('addItemBtn');
+            const imageUpload = document.getElementById('imageUpload');
+            const exportBtn = document.getElementById('exportBtn');
+            const clearBtn = document.getElementById('clearBtn');
+            const tierLabels = document.querySelectorAll('.tier-label');
 
             let draggedElement = null;
 
-            // Função para inicializar eventos de drag and drop nos itens
+            // ===== SISTEMA DE DRAG AND DROP =====
             function makeItemDraggable(item) {
                 item.addEventListener('dragstart', function(e) {
                     draggedElement = this;
@@ -264,13 +299,20 @@
                 item.addEventListener('dragend', function() {
                     this.classList.remove('dragging');
                     draggedElement = null;
+                    saveState(); // Salva automaticamente ao soltar
                 });
+
+                // Botão de deletar item
+                const delBtn = item.querySelector('.delete-btn');
+                if(delBtn) {
+                    delBtn.addEventListener('click', function(e) {
+                        e.stopPropagation(); // Impede que arraste ao clicar em deletar
+                        item.remove();
+                        saveState();
+                    });
+                }
             }
 
-            // Inicializar itens existentes
-            document.querySelectorAll('.item').forEach(makeItemDraggable);
-
-            // Configurar zonas de drop (Tiers e o Banco)
             dropZones.forEach(zone => {
                 zone.addEventListener('dragover', function(e) {
                     e.preventDefault();
@@ -286,33 +328,126 @@
                     this.classList.remove('drag-over');
                     if (draggedElement) {
                         this.appendChild(draggedElement);
+                        saveState(); // Salva automaticamente ao soltar
                     }
                 });
             });
 
-            // Lógica para adicionar novos itens
-            function addNewItem() {
-                const text = input.value.trim();
-                if (text === '') return;
+            // ===== UPLOAD DE IMAGENS =====
+            imageUpload.addEventListener('change', function(e) {
+                const files = Array.from(e.target.files);
+                
+                files.forEach(file => {
+                    if (file.type.startsWith('image/')) {
+                        const reader = new FileReader();
+                        reader.onload = function(event) {
+                            createItem(event.target.result);
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                });
+                this.value = ''; // Reseta o input
+            });
 
-                const newItem = document.createElement('div');
-                newItem.classList.add('item');
-                newItem.setAttribute('draggable', 'true');
-                newItem.textContent = text;
+            function createItem(imageSrc) {
+                const item = document.createElement('div');
+                item.classList.add('item');
+                item.setAttribute('draggable', 'true');
+                item.style.backgroundImage = `url(${imageSrc})`;
                 
-                makeItemDraggable(newItem);
-                itemPool.appendChild(newItem);
-                
-                input.value = '';
-                input.focus();
+                const delBtn = document.createElement('button');
+                delBtn.classList.add('delete-btn');
+                delBtn.innerHTML = '✕';
+                item.appendChild(delBtn);
+
+                makeItemDraggable(item);
+                itemPool.appendChild(item);
+                saveState();
             }
 
-            btn.addEventListener('click', addNewItem);
-            input.addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    addNewItem();
+            // ===== EXPORTAR COMO PNG (MÁGICA DO HTML2CANVAS) =====
+            exportBtn.addEventListener('click', () => {
+                const captureArea = document.getElementById('capture-area');
+                
+                // Muda o texto do botão para dar feedback
+                const originalText = exportBtn.innerHTML;
+                exportBtn.innerHTML = '⏳ Gerando Imagem...';
+                
+                html2canvas(captureArea, {
+                    backgroundColor: '#0f172a', // Cor de fundo da imagem gerada
+                    scale: 2, // Aumenta a qualidade/resolução do PNG
+                    logging: false
+                }).then(canvas => {
+                    const link = document.createElement('a');
+                    link.download = 'Finaltime_TierList.png';
+                    link.href = canvas.toDataURL('image/png');
+                    link.click();
+                    exportBtn.innerHTML = originalText;
+                });
+            });
+
+            // ===== LIMPAR TUDO =====
+            clearBtn.addEventListener('click', () => {
+                if(confirm('Tem certeza que deseja apagar todos os itens da Tier List?')) {
+                    document.querySelectorAll('.item').forEach(item => item.remove());
+                    localStorage.removeItem('finaltimeTierList');
                 }
             });
+
+            // ===== SISTEMA DE SAVE/LOAD (LOCALSTORAGE) =====
+            // Salva os nomes das tiers e os itens de cada zona
+            function saveState() {
+                const state = {
+                    labels: [],
+                    zones: {}
+                };
+
+                // Salva os nomes digitados (S, A, B...)
+                tierLabels.forEach((label, index) => {
+                    state.labels.push(label.innerText);
+                    // Adiciona evento para salvar se o usuário digitar algo novo
+                    label.onblur = saveState; 
+                });
+
+                // Salva o HTML interno (as imagens) de cada drop-zone
+                dropZones.forEach(zone => {
+                    state.zones[zone.id] = zone.innerHTML;
+                });
+
+                try {
+                    localStorage.setItem('finaltimeTierList', JSON.stringify(state));
+                } catch(e) {
+                    console.log('Limite de armazenamento excedido (muitas imagens).');
+                }
+            }
+
+            function loadState() {
+                const saved = localStorage.getItem('finaltimeTierList');
+                if (saved) {
+                    const state = JSON.stringify(saved) ? JSON.parse(saved) : null;
+                    if(state) {
+                        // Restaura os textos das labels
+                        tierLabels.forEach((label, index) => {
+                            if(state.labels[index]) label.innerText = state.labels[index];
+                            label.onblur = saveState;
+                        });
+
+                        // Restaura as imagens nas zonas corretas
+                        dropZones.forEach(zone => {
+                            if(state.zones[zone.id]) {
+                                zone.innerHTML = state.zones[zone.id];
+                                // Como recriamos o HTML, precisamos reativar o drag and drop nas imagens
+                                Array.from(zone.children).forEach(item => makeItemDraggable(item));
+                            }
+                        });
+                    }
+                } else {
+                    tierLabels.forEach(label => label.onblur = saveState);
+                }
+            }
+
+            // Inicia o Load ao abrir a página
+            loadState();
         });
     </script>
 </body>
